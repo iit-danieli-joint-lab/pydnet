@@ -49,19 +49,19 @@ def main(_):
   with tf.Graph().as_default():
     height = args.height
     width = args.width
-    placeholders = {'im0':tf.placeholder(tf.float32,[None, None, None, 3], name='im0')}
+    placeholders = {'im0':tf.compat.v1.placeholder(tf.float32,[None, None, None, 3], name='im0')}
 
-    with tf.variable_scope("model") as scope:
+    with tf.compat.v1.variable_scope("model") as scope:
       model = pydnet(placeholders)
 
-    init = tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer())
+    init = tf.group(tf.compat.v1.global_variables_initializer(),
+                   tf.compat.v1.local_variables_initializer())
 
-    loader = tf.train.Saver()
-    saver = tf.train.Saver()
+    loader = tf.compat.v1.train.Saver()
+    saver = tf.compat.v1.train.Saver()
     cam = cv2.VideoCapture(0)
 
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
         loader.restore(sess, args.checkpoint_dir)
         while True:
@@ -92,4 +92,4 @@ def main(_):
         cam.release()        
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()
