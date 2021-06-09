@@ -26,8 +26,12 @@ Demo video:
 
 ## Requirements
 
-* `Tensorflow 1.8` (recommended) 
+* `Tensorflow 2.5` (recommended) 
 * `python packages` such as opencv, matplotlib
+
+### Note
+
+The original project was conceived for `Tensorflow 1.8`, this fork is based on the guide at https://www.tensorflow.org/guide/upgrade to automatically upgrade this project.
 
 ## Run pydnet on webcam stream
 
