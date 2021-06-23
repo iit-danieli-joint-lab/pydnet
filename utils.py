@@ -27,13 +27,41 @@ import cv2
 
 # Colormap wrapper
 def applyColorMap(img, cmap):
-  colormap = cm.get_cmap(cmap) 
-  colored = colormap(img)
-  return np.float32(cv2.cvtColor(np.uint8(colored*255),cv2.COLOR_RGBA2BGR))/255.
+    colormap = cm.get_cmap(cmap)
+    colored = colormap(img)
+    return np.float32(cv2.cvtColor(np.uint8(colored*255),cv2.COLOR_RGBA2BGR))/255.
+
 
 # 2D convolution wrapper
 def count_text_lines(file_path):
-  f = open(file_path, 'r')
-  lines = f.readlines()
-  f.close()
-  return len(lines)    
+    f = open(file_path, 'r')
+    lines = f.readlines()
+    f.close()
+    return len(lines)
+
+
+# Reconstruct 3D shape from depth
+def reconstruct_3d(depth, fov):
+
+    height = depth.shape[0]
+    width = depth.shape[1]
+    aspect_ratio = width / height
+    fy = 0.5 / np.tan(fov * 0.5)
+    fx = fy / aspect_ratio
+
+    # by construction depth is always greater than 0
+    # however where helps to change the shape of a depthmap
+    # to construct the related 3D point cloud
+    mask = np.where(depth > 0)
+
+    row = mask[0]
+    col = mask[1]
+
+    normalized_x = (col.astype(np.float32) - width * 0.5) / width
+    normalized_y = (row.astype(np.float32) - height * 0.5) / height
+
+    world_x = normalized_x * depth[row, col] / fx
+    world_y = normalized_y * depth[row, col] / fy
+    world_z = depth[row, col]
+    pcd = np.vstack((world_x, world_y, world_z)).T
+    return pcd

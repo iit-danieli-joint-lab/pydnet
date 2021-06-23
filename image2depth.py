@@ -23,10 +23,11 @@
 
 
 import tensorflow as tf
-import sys
+import imageio
 import os
 import argparse
 import time
+import shutil
 # examples/Python/Basic/working_with_numpy.py
 
 import copy
@@ -47,19 +48,21 @@ parser.add_argument('--width', dest='width', type=int, default=512, help='width 
 parser.add_argument('--height', dest='height', type=int, default=256, help='height of input images')
 parser.add_argument('--resolution', dest='resolution', type=int, default=1, help='resolution [1:H, 2:Q, 3:E]')
 parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', type=str, default='checkpoint/IROS18/pydnet', help='checkpoint directory')
+parser.add_argument('--path', dest='path', type=str, default=".", help='image path')
 
 args = parser.parse_args()
 
 def main(_):
 
-    pathname = "scene_pcd"
-    if os.path.isfile(pathname):
-
-        os.mkdir(pathname)
+    pathname = "./scene_pcd"
+    if os.path.isdir(pathname):
+        shutil.rmtree(pathname, ignore_errors=False, onerror=None)
+    os.mkdir(pathname)
 
     with tf.Graph().as_default():
         height = args.height
         width = args.width
+        img_path = args.path
         placeholders = {'im0':tf.compat.v1.placeholder(tf.float32,[None, None, None, 3], name='im0')}
 
         with tf.compat.v1.variable_scope("model") as scope:
@@ -69,51 +72,32 @@ def main(_):
                         tf.compat.v1.local_variables_initializer())
 
         loader = tf.compat.v1.train.Saver()
-        saver = tf.compat.v1.train.Saver()
-        cam = cv2.VideoCapture(0)
 
         with tf.compat.v1.Session() as sess:
             sess.run(init)
             loader.restore(sess, args.checkpoint_dir)
 
-            pcd_n=0
-            while True:
-                pcd_n = pcd_n + 1
-                ret_val, img = cam.read()
-                img = cv2.resize(img, (width, height)).astype(np.float32) / 255.
-                img = np.expand_dims(img, 0)
-                start = time.time()
-                disp = sess.run(model.results[args.resolution - 1], feed_dict={placeholders['im0']: img})
-                end = time.time()
+            img = cv2.imread(img_path)
+            img = cv2.resize(img, (width, height)).astype(np.float32) / 255.
+            img = np.expand_dims(img, 0)
+            start = time.time()
+            disparity = sess.run(model.results[args.resolution-1], feed_dict={placeholders['im0']: img})
+            end = time.time()
 
-                # scaling depth factor
-                scaling_depth_map = 20
-                fov = 120 * np.pi / 180
-                disp_temp = disp[0, :, :, 0] * scaling_depth_map
-                pcd = reconstruct_3d(disp_temp, fov)
+            fov = 90*np.pi/180  # in radians
+            disparity_temp = disparity[0, :, :, 0]
+            pcd = reconstruct_3d(disparity_temp, fov)
 
-                filename = pathname + "/scene_" + str(pcd_n) + ".pcd"
+            pc = o3d.geometry.PointCloud()
+            pc.points = o3d.utility.Vector3dVector(pcd)
+            o3d.io.write_point_cloud(pathname+"/scene.pcd", pc)
 
-                pc = o3d.geometry.PointCloud()
-                pc.points = o3d.utility.Vector3dVector(pcd)
-                o3d.io.write_point_cloud(filename, pc)
+            scaling = 20  # scaling depth factor
+            disp_color = applyColorMap(disparity_temp*scaling, 'plasma')
+            imageio.imwrite(pathname+"/depth.jpg", disp_color)
 
-                disp_color = applyColorMap(disp_temp, 'plasma')
-                toShow = (np.concatenate((img[0], disp_color), 0) * 255.).astype(np.uint8)
+            print("Time: " + str(end - start))
 
-                cv2.imshow('pydnet', toShow)
-                k = cv2.waitKey(1)
-                if k == 1048603 or k == 27:
-                    break  # esc to quit
-                if k == 1048688:
-                    cv2.waitKey(0) # 'p' to pause
-
-                print("Time: " + str(end - start))
-                del img
-                del disp
-                del toShow
-
-            cam.release()
 
 if __name__ == '__main__':
     tf.compat.v1.app.run()
