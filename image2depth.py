@@ -21,22 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
-import tensorflow as tf
-import imageio
-import os
 import argparse
-import time
+import os
 import shutil
-# examples/Python/Basic/working_with_numpy.py
+import time
 
-import copy
-import numpy as np
+import imageio
 import open3d as o3d
 
-import datetime
-from utils import *
 from pydnet import *
+from utils import *
+
+# examples/Python/Basic/working_with_numpy.py
 
 # forces tensorflow to run on CPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'

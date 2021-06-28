@@ -25,9 +25,16 @@ Demo video:
 [youtube](https://www.youtube.com/watch?v=Q6ao4Jrulns)
 
 ## Requirements
-
-* `Tensorflow 2.5` (recommended) 
-* `python packages` such as opencv, matplotlib
+* Install Miniconda from https://github.com/robotology/robotology-superbuild/blob/master/doc/install-miniforge.md then run:
+```
+conda deactivate
+conda create -p ./env 
+conda activate ./env
+conda install python==3.8
+pip install tensorflow=2.5 
+conda install opencv matplotlib imageio
+conda install -c open3d-admin -c conda-forge open3d
+```
 
 ### Note
 
@@ -35,11 +42,21 @@ The original project was conceived for `Tensorflow 1.8`, this fork is based on t
 
 ## Run pydnet on webcam stream
 
-To run pydnet, just launch
+Just launch in a terminal:
 
 ```
 python webcam.py --checkpoint_dir ./checkpoint/IROS18/pydnet --resolution [1,2,3]
 ```
+
+## Run pydnet with a given image to get depthmap and point cloud
+
+Just launch in a terminal:
+
+```
+python image2depth.py --width 512 --height 256 --checkpoint_dir ./checkpoint/IROS18/pydnet --resolution 1 --path "/path/to/image"
+```
+
+Results are stored into the automatically generated `scene_pcd` folder
 
 ## Train pydnet from scratch
 
