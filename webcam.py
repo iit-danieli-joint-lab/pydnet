@@ -22,20 +22,16 @@
 # SOFTWARE.
 
 
-import tensorflow as tf
-import sys
-import os
 import argparse
+import os
 import time
-# examples/Python/Basic/working_with_numpy.py
 
-import copy
-import numpy as np
 import open3d as o3d
 
-import datetime
-from utils import *
 from pydnet import *
+from utils import *
+
+# examples/Python/Basic/working_with_numpy.py
 
 # forces tensorflow to run on CPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
